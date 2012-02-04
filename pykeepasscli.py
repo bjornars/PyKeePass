@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 from struct import pack, unpack
 from hashlib import sha256
 from Crypto.Cipher import AES
