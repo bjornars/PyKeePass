@@ -172,10 +172,14 @@ class KdbReader(object):
 
 if __name__ == '__main__':
     from getpass import getpass
-    filename = raw_input('Password file: ')
-    password = getpass()
+    import os
 
-    kr = KdbReader(filename, password)
+    filename = raw_input('Password file: ')
+    full_filename = os.path.expanduser(filename)
+    assert os.path.isfile(full_filename), "Cannot find/open %s" % filename
+
+    password = getpass()
+    kr = KdbReader(full_filename, password)
     kr.parse()
 
     print "File read and decoded successfully"
@@ -187,7 +191,7 @@ if __name__ == '__main__':
                 kr.search(term)
             else:
                 kr.list()
-            raw_input('Done?')
+            raw_input('Done? ')
 
         except EOFError:
             break
