@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 from struct import pack, unpack
 from hashlib import sha256
 from Crypto.Cipher import AES
@@ -169,66 +168,3 @@ class KdbReader(object):
 
         self.data = self.data[self.DB_HEADER_SIZE:]
         self.header = h
-
-if __name__ == '__main__':
-    from getpass import getpass
-    from getopt import getopt, GetoptError
-    import os
-    import sys
-
-    def usage():
-        return """A light-weight commandline interface to KeePassX database-files.
-
-    -f, --file      the database file to open
-    -h, --help      this right here
-
-Source at http://github.com/bjornars/PyKeePass """
-
-    def error(text):
-        print >>sys.stderr, text
-        sys.exit(-1)
-
-    def raw_input_clean(prompt):
-        try:
-            return raw_input(prompt)
-        except KeyboardInterrupt:
-            sys.exit(-1)
-
-    try:
-        opts, rest = getopt(sys.argv[1:], "f:h", ["file=", "help"])
-        if rest: raise GetoptError("a tad too many arguments")
-    except GetoptError as e:
-        print >> sys.stderr, e
-        sys.exit(-1)
-
-    opts = dict(opts)
-    if '-h' in opts or '--help' in opts:
-        print usage()
-        sys.exit(0)
-
-    filename = opts.get('-f') or opts.get('--file') or raw_input_clean('Password file: ')
-    full_filename = os.path.expanduser(filename)
-    if not os.path.isfile(full_filename):
-        error( "Cannot find/open %s" % filename)
-
-    password = getpass()
-    kr = KdbReader(full_filename, password)
-    kr.parse()
-
-    print "File read and decoded successfully"
-    while 1:
-        try:
-            term = raw_input('Search term (or blank): ')
-
-            if term:
-                kr.search(term)
-            else:
-                kr.list()
-            raw_input('Done? ')
-
-        except EOFError:
-            break
-        finally:
-            # clear screen
-            print '\033[2J'
-
