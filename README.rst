@@ -6,8 +6,8 @@ This is a commandline client for KeePassX in python. It is read-only for the mom
 Prerequisites
 -------------
 
-* python<=2.6
-* pycrypto<=2.5
+* python>=2.6
+* pycrypto>=2.5
 
 Use
 ---
