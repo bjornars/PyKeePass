@@ -5,7 +5,7 @@ import sys
 
 from getpass import getpass
 from getopt import getopt, GetoptError
-from kdb_file import KdbReader
+from kdb_file import KdbReader, KdbReaderFileParseError,KdbReaderDecodeFailError
 
 def usage():
     return """A light-weight commandline interface to KeePassX database-files.
@@ -13,20 +13,22 @@ def usage():
 -f, --file      the database file to open
 -h, --help      this right here
 
+-p, --password  don't use this
+
 Source at http://github.com/bjornars/PyKeePass """
 
 def error(text):
     print >>sys.stderr, text
     sys.exit(-1)
 
-def raw_input_clean(prompt):
+def get_clean(method, *args):
     try:
-        return raw_input(prompt)
+        return method(*args)
     except KeyboardInterrupt:
         sys.exit(-1)
 
 try:
-    opts, rest = getopt(sys.argv[1:], "f:h", ["file=", "help"])
+    opts, rest = getopt(sys.argv[1:], "f:p:h", ["file=", "password=", "help"])
     if rest: raise GetoptError("a tad too many arguments")
 except GetoptError as e:
     print >> sys.stderr, e
@@ -37,25 +39,37 @@ if '-h' in opts or '--help' in opts:
     print usage()
     sys.exit(0)
 
-filename = opts.get('-f') or opts.get('--file') or raw_input_clean('Password file: ')
+filename = opts.get('-f') or opts.get('--file') or get_clean(raw_input, 'Password file: ')
 full_filename = os.path.expanduser(filename)
 if not os.path.isfile(full_filename):
     error( "Cannot find/open %s" % filename)
 
-password = getpass()
-kr = KdbReader(full_filename, password)
-kr.parse()
+kr = KdbReader(full_filename)
+
+password = opts.get('-p') or opts.get('--password')
+if password:
+    kr.parse(password)
+else:
+    while 1:
+        password = get_clean(getpass)
+        if not password:
+            error('blank password')
+        try:
+            kr.parse(password)
+            break
+        except KdbReaderDecodeFailError:
+            print >>sys.stderr, "error decoding, wrong passsword?"
 
 print "File read and decoded successfully"
 while 1:
     try:
-        term = raw_input('Search term (or blank): ')
+        term = get_clean(raw_input, 'Search term (or blank): ')
 
         if term:
             kr.search(term)
         else:
             kr.list()
-        raw_input('Done? ')
+        get_clean(raw_input,'Done? ')
 
     except EOFError:
         break
