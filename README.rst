@@ -12,4 +12,5 @@ Prerequisites
 Use
 ---
 
-Run `pykeepasscli.py` with python.
+Run `PyKeePass`
+
