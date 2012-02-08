@@ -5,7 +5,7 @@ import sys
 
 from getpass import getpass
 from getopt import getopt, GetoptError
-from kdb_file import KdbReader, KdbReaderFileParseError,KdbReaderDecodeFailError
+from kdb_file import KdbReader, KdbReaderFileParseError, KdbReaderDecodeFailError
 
 def usage():
     return """A light-weight commandline interface to KeePassX database-files.
@@ -27,6 +27,17 @@ def get_clean(method, *args):
     except KeyboardInterrupt:
         sys.exit(-1)
 
+def get_password():
+    while 1:
+        password = get_clean(getpass)
+        if not password:
+            error('blank password')
+        try:
+            kr.parse(password)
+            break
+        except KdbReaderDecodeFailError:
+            print >>sys.stderr, "error decoding, wrong passsword?"
+
 try:
     opts, rest = getopt(sys.argv[1:], "f:p:h", ["file=", "password=", "help"])
     if rest: raise GetoptError("a tad too many arguments")
@@ -44,21 +55,15 @@ full_filename = os.path.expanduser(filename)
 if not os.path.isfile(full_filename):
     error( "Cannot find/open %s" % filename)
 
+# read file
 kr = KdbReader(full_filename)
 
+#decode with password
 password = opts.get('-p') or opts.get('--password')
 if password:
     kr.parse(password)
 else:
-    while 1:
-        password = get_clean(getpass)
-        if not password:
-            error('blank password')
-        try:
-            kr.parse(password)
-            break
-        except KdbReaderDecodeFailError:
-            print >>sys.stderr, "error decoding, wrong passsword?"
+    get_password()
 
 print "File read and decoded successfully"
 while 1:
@@ -66,9 +71,9 @@ while 1:
         term = get_clean(raw_input, 'Search term (or blank): ')
 
         if term:
-            kr.search(term)
+            print kr.search(term)
         else:
-            kr.list()
+            print kr.list()
         get_clean(raw_input,'Done? ')
 
     except EOFError:

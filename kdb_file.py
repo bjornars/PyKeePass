@@ -1,6 +1,7 @@
 from struct import pack, unpack
 from hashlib import sha256
 from Crypto.Cipher import AES
+from StringIO import StringIO
 
 class KdbReaderException(Exception):
     pass
@@ -44,8 +45,7 @@ class KdbReader(object):
     def parse_body(self, cleartext):
         self.groups, pos = self.parse_groups(cleartext, 0)
         self.entries, pos = self.parse_entries(cleartext, pos)
-        if (len(cleartext) != pos):
-            print 'too much data'
+        assert len(cleartext) == pos, 'too much data'
 
     def parse_entries(self, data,pos):
         n_entries = self.header['n_entries']
@@ -158,14 +158,17 @@ class KdbReader(object):
 
     def list(self):
         assert self.is_parsed
+        output = StringIO()
         for each in self.entries:
-            print 'Title:    ', each['title']
-            print 'Group:    ', self.groups[each['group_id']]['title']
-            print 'Url:      ', each['url']
-            print 'Username: ', each['username']
-            print 'Password: ', each['password']
-            print 'Comment:  ', each['comment']
-            print '-' * 25
+            print >>output, 'Title:    ', each['title']
+            print >>output, 'Group:    ', self.groups[each['group_id']]['title']
+            print >>output, 'Url:      ', each['url']
+            print >>output, 'Username: ', each['username']
+            print >>output, 'Password: ', each['password']
+            print >>output, 'Comment:  ', each['comment']
+            print >>output, '-' * 25
+        
+        return output.getvalue()
 
     def search(self, term):
         def is_in_dict(term, dict):
@@ -175,13 +178,15 @@ class KdbReader(object):
             return False
 
         assert self.is_parsed
+        output = StringIO()
         for each in self.entries:
             if is_in_dict(term, each):
-                print 'Title:    ', each['title']
-                print 'Group:    ', self.groups[each['group_id']]['title']
-                print 'Url:      ', each['url']
-                print 'Username: ', each['username']
-                print 'Password: ', each['password']
-                print 'Comment:  ', each['comment']
-                print '-' * 25
+                print >>output, 'Title:    ', each['title']
+                print >>output, 'Group:    ', self.groups[each['group_id']]['title']
+                print >>output, 'Url:      ', each['url']
+                print >>output, 'Username: ', each['username']
+                print >>output, 'Password: ', each['password']
+                print >>output, 'Comment:  ', each['comment']
+                print >>output, '-' * 25
 
+        return output
