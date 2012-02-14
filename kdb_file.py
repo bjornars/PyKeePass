@@ -1,6 +1,10 @@
-from struct import pack, unpack
+from struct import pack
+from struct import unpack as unpack2
 from hashlib import sha256
 from Crypto.Cipher import AES
+
+def unpack(fmt, string):
+    return unpack2("=" + fmt, string)
 
 class KdbReaderException(Exception):
     pass
