@@ -119,9 +119,11 @@ class KdbReader(object):
         return groups, pos
 
     def decrypt_body(self, password, data):
+        import time
         key = sha256(password).digest()
         hdr = self.header
-
+        
+        then = time.time()
         # sha256 the password, encrypt it upon itself 50000 times, sha256 it again, and sha256 it again concatenated with a random number :|
         cipher = AES.new(hdr['seed_key'], AES.MODE_ECB)
         for x in range(hdr['seed_rot_n']):
@@ -135,6 +137,9 @@ class KdbReader(object):
         padding = unpack("b", body[-1])[0]
         body = body[:-padding]
 
+        now = time.time()
+
+        print 'spent %.3fms on decryption' % ((now - then) * 1000)
         if sha256(body).digest() != hdr['checksum']:
             raise KdbReaderDecodeFailError()
 
