@@ -198,4 +198,4 @@ class KdbReader(object):
                 print >>output, 'Comment:  ', each['comment']
                 print >>output, '-' * 25
 
-        return output
+        return output.getvalue()
